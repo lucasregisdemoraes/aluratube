@@ -4,9 +4,29 @@ import { CSSReset } from "../src/components/CSSReset";
 import Menu from "../src/components/Menu";
 import { StyledTimeline } from "../src/components/Timeline";
 import React from "react";
+import { videoService } from "../src/services/videoService";
 
 function HomePage() {
+    const service = videoService()
+
     const [filterValue, setfilterValue] = React.useState("")
+    const [playlists, setPlaylists] = React.useState({})
+
+    React.useEffect(() => {
+        service
+            .getAllVideos()
+            .then(response => {
+                const newPlaylists = { ...playlists }
+                response.data.forEach((video) => {
+                    if (!newPlaylists[video.playlist]) {
+                        newPlaylists[video.playlist] = []
+                    }
+                    newPlaylists[video.playlist].push(video)
+                })
+                setPlaylists(newPlaylists)
+            })
+    }, [])
+
     return (
         <>
             <CSSReset />
@@ -17,7 +37,7 @@ function HomePage() {
             }}>
                 <Menu filterValue={filterValue} setFilterValue={setfilterValue} />
                 <Header />
-                <Timeline filterValue={filterValue} playlists={config.playlists} />
+                <Timeline filterValue={filterValue} playlists={playlists} />
             </div>
         </>
     )
@@ -82,7 +102,7 @@ function Timeline({ filterValue, ...props }) {
                                 return titleNormalized.includes(filterValueNormalized)
                             }).map(video => {
                                 return (
-                                    <a key={video.url} href={video.url}>
+                                    <a key={video.id} href={video.url}>
                                         <img src={video.thumb} />
                                         <span>{video.title}</span>
                                     </a>
